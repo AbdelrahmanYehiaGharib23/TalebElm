@@ -1,0 +1,51 @@
+# ============================================================
+# TalebElm - .NET / Visual Studio / VS Code / Rider / macOS
+# This file tells git which files NOT to save to the repository.
+# ============================================================
+
+# ---------- Build output ----------
+# These folders are created by .NET and rebuilt each build.
+# We never save them.
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+publish/
+artifacts/
+
+# ---------- NuGet (packages) ----------
+# Downloaded packages are restored, not saved.
+*.nupkg
+.nuget/
+
+# ---------- IDE / editor user files ----------
+# These contain only your own personal settings.
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userprefs
+*.sln.docstates
+
+# ---------- Databases / local files ----------
+*.mdf
+*.ldf
+*.bak
+*.sqlite
+
+# ---------- Secrets (never push these) ----------
+.env
+.env.*
+appsettings.Production.json
+
+# ---------- Test results ----------
+[Tt]est[Rr]esult*/
+coverage/
+*.trx
+*.coverage
+
+# ---------- Operating system files ----------
+.DS_Store
+Thumbs.db
+desktop.ini

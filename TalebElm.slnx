@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TalebElm.Api/TalebElm.Api.csproj" />
+    <Project Path="src/TalebElm.Application/TalebElm.Application.csproj" />
+    <Project Path="src/TalebElm.Domain/TalebElm.Domain.csproj" />
+    <Project Path="src/TalebElm.Infrastructure/TalebElm.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TalebElm.Tests/TalebElm.Tests.csproj" />
+  </Folder>
+</Solution>
