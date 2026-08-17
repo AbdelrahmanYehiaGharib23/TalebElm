@@ -139,23 +139,6 @@ core rules only. No database code, no web code, no methods with real behavior.
     a `string message` and passes it to the base class. Do not add any methods.
   - **Hint:** `public class DomainException : Exception { public DomainException(string message) : base(message) { } }`
 
-- **Task 10: Create NotFoundException Class**
-  - **Difficulty:** Very Easy
-  - **Labels:** `good first issue`, `layer:domain`, `exception`
-  - **Location:** `TalebElm.Domain/Exceptions/`
-  - **Instructions:** Create a public class named `NotFoundException`. It should
-    inherit from `DomainException`. Add one constructor that takes a
-    `string message` and passes it to the base class. Do not add any methods.
-  - **Hint:** `public class NotFoundException : DomainException { public NotFoundException(string message) : base(message) { } }`
-
-- **Task 11: Create ValidationException Class**
-  - **Difficulty:** Very Easy
-  - **Labels:** `good first issue`, `layer:domain`, `exception`
-  - **Location:** `TalebElm.Domain/Exceptions/`
-  - **Instructions:** Create a public class named `ValidationException`. It should
-    inherit from `DomainException`. Add one constructor that takes a
-    `string message` and passes it to the base class. Do not add any methods.
-  - **Hint:** `public class ValidationException : DomainException { public ValidationException(string message) : base(message) { } }`
 
 - **Task 12: Create IRepository Interface**
   - **Difficulty:** Medium
@@ -186,17 +169,6 @@ core rules only. No database code, no web code, no methods with real behavior.
     should inherit from `IRepository<Track>`. Do not add any members yet. An
     empty interface is fine.
   - **Hint:** `public interface ITrackRepository : IRepository<Track> { }`
-
-- **Task 15: Create IUnitOfWork Interface**
-  - **Difficulty:** Medium
-  - **Labels:** `layer:domain`, `interface`, `setup`
-  - **Location:** `TalebElm.Domain/Interfaces/`
-  - **Instructions:** Create a public interface named `IUnitOfWork`. It
-    represents one shared database session. It lists other interfaces as
-    properties, which is why it is a bit harder. Add two read-only properties:
-    `Users` (IUserRepository) and `Tracks` (ITrackRepository), plus a
-    `SaveChangesAsync` method signature that returns a Task of int. No bodies.
-  - **Hint:** `public interface IUnitOfWork { IUserRepository Users { get; } ITrackRepository Tracks { get; } Task<int> SaveChangesAsync(); }`
 
 ---
 
@@ -283,19 +255,6 @@ the app can do. Here we create empty interfaces and empty DTO records. No logic.
     Task of TrackResponse). No bodies, no logic.
   - **Hint:** `public interface ITrackService { Task<IReadOnlyList<TrackResponse>> GetAllAsync(); Task<TrackResponse> CreateAsync(CreateTrackRequest request); }`
 
-- **Task 25: Create CreateTrackRequestValidator Class**
-  - **Difficulty:** Medium
-  - **Labels:** `layer:application`, `setup`, `validation`
-  - **Location:** `TalebElm.Application/Validators/`
-  - **Instructions:** Create a public class named `CreateTrackRequestValidator`.
-    It should inherit from the FluentValidation class
-    `AbstractValidator<CreateTrackRequest>`. Add an empty constructor. Do not
-    write any validation rules yet. No logic. This one is Medium because it
-    needs the FluentValidation package, which must be added to the project
-    first with the command
-    `dotnet add src/TalebElm.Application package FluentValidation.DependencyInjectionExtensions`.
-  - **Hint:** `public class CreateTrackRequestValidator : AbstractValidator<CreateTrackRequest> { public CreateTrackRequestValidator() { } }`
-
 ---
 
 ## Phase 3: Infrastructure Layer (Tasks 26-35)
@@ -304,18 +263,6 @@ Focus on the AppDbContext, empty EntityTypeConfigurations, and empty Repository
 classes. The Infrastructure layer talks to the database. These tasks are the
 hardest in the list. They need the Entity Framework Core package and connect to
 several other files. Empty bodies or NotImplementedException are fine.
-
-- **Task 26: Create AppDbContext Class**
-  - **Difficulty:** Medium
-  - **Labels:** `layer:infrastructure`, `database`, `setup`
-  - **Location:** `TalebElm.Infrastructure/Persistence/`
-  - **Instructions:** Create a public class named `AppDbContext`. It should
-    inherit from `DbContext`. Add a constructor that takes
-    `DbContextOptions<AppDbContext>` and passes it to the base class. Do not add
-    logic. The `Microsoft.EntityFrameworkCore` package is required; add it with the
-    command `dotnet add src/TalebElm.Infrastructure package Microsoft.EntityFrameworkCore`.
-    Ask for help if the package install is confusing.
-  - **Hint:** `public class AppDbContext : DbContext { public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { } }`
 
 - **Task 27: Create UserConfiguration Class**
   - **Difficulty:** Medium
