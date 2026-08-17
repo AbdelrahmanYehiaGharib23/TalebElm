@@ -118,14 +118,7 @@ core rules only. No database code, no web code, no methods with real behavior.
 
 
 
-- **Task 6: Create TrackStatus Enum**
-  - **Difficulty:** Very Easy
-  - **Labels:** `good first issue`, `layer:domain`, `enum`
-  - **Location:** `TalebElm.Domain/Enums/`
-  - **Instructions:** Create a public enum named `TrackStatus`. Add three named
-    options: `Draft`, `Published`, and `Archived`. Give each a number.
-    Enums do not have methods.
-  - **Hint:** `public enum TrackStatus { Draft = 0, Published = 1, Archived = 2 }`
+
 
 - **Task 7: Create LessonType Enum**
   - **Difficulty:** Very Easy
