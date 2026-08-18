@@ -130,15 +130,6 @@ core rules only. No database code, no web code, no methods with real behavior.
     Enums do not have methods.
   - **Hint:** `public enum UserRole { Student = 0, Instructor = 1, Admin = 2 }`
 
-- **Task 9: Create DomainException Class**
-  - **Difficulty:** Very Easy
-  - **Labels:** `good first issue`, `layer:domain`, `exception`
-  - **Location:** `TalebElm.Domain/Exceptions/`
-  - **Instructions:** Create a public class named `DomainException`. It should
-    inherit from the built-in `Exception` class. Add one constructor that takes
-    a `string message` and passes it to the base class. Do not add any methods.
-  - **Hint:** `public class DomainException : Exception { public DomainException(string message) : base(message) { } }`
-
 
 - **Task 12: Create IRepository Interface**
   - **Difficulty:** Medium
