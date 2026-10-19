@@ -1,74 +1,52 @@
-﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Text;
 using TalebElm.Domain.Entities;
-using TalebElm.Infrastructure.Persistence;
+using TalebElm.Tests.Infrastructure;
 
-namespace TalebElm.Tests.IntegrationTests
+namespace TalebElm.Tests.IntegrationTests;
+
+public class UserProgressUniqueIndexTests : SqliteTestBase
 {
-    public class UserProgressUniqueIndexTests:IDisposable
+    [Fact]
+    public async Task SaveChangesAsync_DuplicateUserIdAndModuleId_ThrowsDbUpdateException()
     {
-         readonly AppDbContext _context ;
-         readonly SqliteConnection _sqliteConnection;
-        public UserProgressUniqueIndexTests()
-        {
-            _sqliteConnection = new SqliteConnection("Filename=:memory:");
-            _sqliteConnection.Open();
-            var options = new DbContextOptionsBuilder<AppDbContext>()
-                 .UseSqlite(_sqliteConnection)
-                 .Options;
-            _context = new AppDbContext(options);
-            _context.Database.EnsureCreated();
+        var track = new Track { Id = Guid.NewGuid(), Name = "Backend", Description = "Backend track" };
+        var module = new Module { Id = Guid.NewGuid(), TrackId = track.Id, Title = "M1", Order = 1 };
+        var user = new User { Id = Guid.NewGuid(), Name = "Learner", Email = "learner@test.com", PasswordHash = "hash", JoinedAt = DateTime.UtcNow };
+        DbContext.Tracks.Add(track);
+        DbContext.Modules.Add(module);
+        DbContext.Users.Add(user);
+        await SaveChangesAsync();
+        ClearTracker();
 
+        var userId = user.Id;
+        var moduleId = module.Id;
+        DbContext.UserProgresses.AddRange(
+            new UserProgress { UserId = userId, ModuleId = moduleId },
+            new UserProgress { UserId = userId, ModuleId = moduleId });
 
-        }
+        await Assert.ThrowsAsync<DbUpdateException>(SaveChangesAsync);
+    }
 
-        public void Dispose()
-        {
-            _sqliteConnection.Close();
-            _sqliteConnection.Dispose();
+    [Fact]
+    public async Task TwoUsersCanProgressForTheSameModule()
+    {
+        var track = new Track { Id = Guid.NewGuid(), Name = "Backend", Description = "Backend track" };
+        var module = new Module { Id = Guid.NewGuid(), TrackId = track.Id, Title = "M1", Order = 1 };
+        var user1 = new User { Id = Guid.NewGuid(), Name = "User 1", Email = "u1@test.com", PasswordHash = "hash-1", JoinedAt = DateTime.UtcNow };
+        var user2 = new User { Id = Guid.NewGuid(), Name = "User 2", Email = "u2@test.com", PasswordHash = "hash-2", JoinedAt = DateTime.UtcNow };
+        DbContext.Tracks.Add(track);
+        DbContext.Modules.Add(module);
+        DbContext.Users.AddRange(user1, user2);
+        await SaveChangesAsync();
+        ClearTracker();
 
-        }
+        var moduleId = module.Id;
+        DbContext.UserProgresses.AddRange(
+            new UserProgress { UserId = user1.Id, ModuleId = moduleId },
+            new UserProgress { UserId = user2.Id, ModuleId = moduleId });
 
-        [Fact]
-        public async Task SaveChangesAsync_DuplicateUserIdAndModuleId_ThrowsDbUpdateException()
-        {
-            var userid = new Guid();
-            var moduleId = new Guid();
-            using (var context = _context) 
-            
-            {
-             
-                var user = new UserProgress { UserId =userid, ModuleId = moduleId };
-                await _context.AddAsync(user);
-                var user1 = new UserProgress { UserId = userid, ModuleId = moduleId };
-                await _context.AddAsync(user1);
-               var extest= await Assert.ThrowsAsync<DbUpdateException>(() => _context.SaveChangesAsync());
-              
-            }
-        }
-        [Fact]
-        public async Task TwoUsersCanProgressForTheSameModule()
-        {
-     
-            var moduleId = new Guid();
-            using (var context = _context)
+        await SaveChangesAsync();
 
-            {
-
-                var user = new UserProgress { UserId = Guid.NewGuid(), ModuleId = moduleId };
-                await _context.AddAsync(user);
-                var user1 = new UserProgress { UserId = Guid.NewGuid(), ModuleId = moduleId };
-                await _context.AddAsync(user1);
-                await _context.SaveChangesAsync();
-                var countusers = await _context.UserProgresses.CountAsync();
-                Assert.Equal(2 , countusers);
-              
-            }
-        }
-
-
+        Assert.Equal(2, await DbContext.UserProgresses.CountAsync());
     }
 }
