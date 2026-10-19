@@ -20,6 +20,8 @@ builder.Services.AddScoped<ITrackService, TrackService>();
 builder.Services.AddScoped<IExamService, ExamService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserProgressService, UserProgressService>();
+builder.Services.AddScoped<IModuleService, ModuleService>();
+builder.Services.AddScoped<ILessonService, LessonService>();
 
 builder.Services.AddScoped<IValidator<CreateTrackRequest>, CreateTrackRequestValidator>();
 

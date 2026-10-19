@@ -1,7 +1,6 @@
 ﻿using TalebElm.Domain.Interfaces;
 using TalebElm.Infrastructure.Persistence;
 using TalebElm.Infrastructure.Persistence.Repositories;
-
 namespace TalebElm.Infrastructure.Repositories;
 
 public class UnitOfWork : IUnitOfWork
@@ -18,6 +17,7 @@ public class UnitOfWork : IUnitOfWork
 
     public IExamRepository Exams { get; }
     public ITrackEnrollmentRepository TrackEnrollments { get; }
+    public ILessonRepository Lessons { get; }
 
     public UnitOfWork(AppDbContext context)
     {
@@ -28,6 +28,7 @@ public class UnitOfWork : IUnitOfWork
         Exams = new ExamRepository(_context);
         UserProgresses = new UserProgressRepository(_context);
         TrackEnrollments = new TrackEnrollmentRepository(_context);
+        Lessons = new LessonRepository(_context);
     }
 
     public async Task<int> SaveChangesAsync()
