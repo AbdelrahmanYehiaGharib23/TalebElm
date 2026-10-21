@@ -95,7 +95,7 @@ Service implementations are registered in `Program.cs` via DI:
 builder.Services.AddScoped<IExamService, ExamService>();
 ```
 
-**Current status:** `Program.cs` registers `AddInfrastructure`, `IUnitOfWork`, Application services, and the track request validator, and adds `ExceptionHandlingMiddleware` to the pipeline. The existing feature controllers do not yet delegate to service interfaces. Treat controller delegation as the required pattern, not as current behavior.
+**Current status:** `Program.cs` registers `AddInfrastructure`, `AddApplication` (password hasher, validators, Module/Lesson services), `IUnitOfWork`, and adds `ExceptionHandlingMiddleware` to the pipeline. The existing feature controllers do not yet delegate to service interfaces. Treat controller delegation as the required pattern, not as current behavior.
 
 ---
 
@@ -166,6 +166,7 @@ System.Exception
  └── DomainException              → 400 Bad Request (general domain error)
       ├── NotFoundException       → 404 Not Found
       ├── ValidationException     → 400 Bad Request (input validation)
+      ├── ConflictException       → 409 Conflict (duplicate/conflicting state)
       └── NotImplementedException → 501 Not Implemented (placeholder)
 ```
 
@@ -179,6 +180,7 @@ and map them to standard HTTP responses:
 | `NotFoundException` | 404 | Entity lookup returned `null` |
 | `ValidationException` | 400 | Business rule violated (e.g., duplicate email) |
 | `DomainException` | 400 | Any other business error |
+| `ConflictException` | 409 | Duplicate entity, conflicting state, or blocked delete |
 | `NotImplementedException` | 501 | Placeholder for unfinished features |
 
 ### Usage pattern
