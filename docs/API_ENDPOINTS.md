@@ -32,7 +32,7 @@ There is no registration endpoint, enrollment endpoint, nested lesson route, or 
 | POST | `/api/auth/login` | Login request | Token response | 200, 400, 401 |
 | GET | `/api/tracks` | None | Published Track summaries | 200 |
 | GET | `/api/tracks/{trackId}` | None | Track detail with ordered Modules | 200, 404 |
-| POST | `/api/tracks/{trackId}/enrollment` | None; learner comes from auth | Enrollment response | 201, 401, 404, 409 |
+| POST | `/api/tracks/{trackId}/enrollment` | None; Student comes from auth | Enrollment response | 201, 401, 404, 409 |
 
 `User` currently has no password, role, or enrollment relationship. The registration/auth contract must be decided before these routes are implemented. `TrackEnrollment` is proposed separately from `UserProgress`.
 
@@ -49,24 +49,24 @@ There is no registration endpoint, enrollment endpoint, nested lesson route, or 
 
 | HTTP | Route | Request | Response | Target status |
 |---|---|---|---|---|
-| GET | `/api/exams/{examId}` | None | Exam with learner-safe question/option DTOs | 200, 403, 404 |
-| POST | `/api/exams/{examId}/submit` | Selected question/option IDs; learner from auth | Exam result and pass state | 200, 400, 401, 403, 404 |
-| GET | `/api/progress/me` | None | Progress summaries for authenticated learner | 200, 401 |
+| GET | `/api/exams/{examId}` | None | Exam with Student-safe question/option DTOs | 200, 403, 404 |
+| POST | `/api/exams/{examId}/submit` | Selected question/option IDs; Student from auth | Exam result and pass state | 200, 400, 401, 403, 404 |
+| GET | `/api/progress/me` | None | Progress summaries for authenticated Student | 200, 401 |
 | GET | `/api/progress/me/tracks/{trackId}` | None | Ordered progress for one Track | 200, 401, 404 |
 
 The current `SubmitExamRequest` accepts a client-supplied score. Do not use that value for trusted grading. The target request must submit answers so the server can compare them with a server-side answer key, calculate the score, record `UserProgress`, and unlock only the next Module on a pass.
 
 ### Who may call (proposed)
 
-No roles exist in code yet. The MVP needs two: **Learner** (default after registration) and **Admin** (content author).
+The MVP role model uses `UserRole` (`Student = 1`, `Instructor = 2`, `Admin = 3`). For the MVP learning flow, two roles are active: Student (the learner, assigned by default after registration) and Admin (content author).
 
 | Access | Routes |
 |---|---|
 | Anonymous | `GET /api/health`, `POST /api/auth/register`, `POST /api/auth/login` |
-| Learner (authenticated) | `GET /api/tracks`, `GET /api/tracks/{trackId}`, `POST /api/tracks/{trackId}/enrollment`, lesson reads, `GET /api/exams/{examId}`, `POST /api/exams/{examId}/submit`, `/api/progress/me*` |
+| Student (authenticated) | `GET /api/tracks`, `GET /api/tracks/{trackId}`, `POST /api/tracks/{trackId}/enrollment`, lesson reads, `GET /api/exams/{examId}`, `POST /api/exams/{examId}/submit`, `/api/progress/me*` |
 | Admin | `POST/PUT/DELETE` on Tracks, Modules, Lessons, and Exams, and `GET /api/users` |
 
-Learner-facing reads should also return a Track's Modules and Lessons only to an enrolled learner once the unlock rule is implemented: a locked Module's Lessons and Exam must not be served. When an authenticated learner requests a Lesson or Exam (including exam submission) that belongs to a Module the learner has not unlocked, the API must return `403 Forbidden` — not `404` — because the resource exists but the learner is not allowed to access it yet.
+Student-facing reads should also return a Track's Modules and Lessons only to an enrolled Student once the unlock rule is implemented: a locked Module's Lessons and Exam must not be served. When an authenticated Student requests a Lesson or Exam (including exam submission) that belongs to a Module the Student has not unlocked, the API must return `403 Forbidden` — not `404` — because the resource exists but the Student is not allowed to access it yet.
 
 ## 3. Validation and Response Rules
 
