@@ -166,6 +166,7 @@ System.Exception
  └── DomainException              → 400 Bad Request (general domain error)
       ├── NotFoundException       → 404 Not Found
       ├── ValidationException     → 400 Bad Request (input validation)
+      ├── ConflictException       → 409 Conflict (duplicate/conflicting state)
       └── NotImplementedException → 501 Not Implemented (placeholder)
 ```
 
@@ -179,6 +180,7 @@ and map them to standard HTTP responses:
 | `NotFoundException` | 404 | Entity lookup returned `null` |
 | `ValidationException` | 400 | Business rule violated (e.g., duplicate email) |
 | `DomainException` | 400 | Any other business error |
+| `ConflictException` | 409 | Duplicate entity, conflicting state, or blocked delete |
 | `NotImplementedException` | 501 | Placeholder for unfinished features |
 
 ### Usage pattern

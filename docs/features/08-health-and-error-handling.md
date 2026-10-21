@@ -16,12 +16,13 @@ Expose a lightweight health endpoint so callers can confirm the API process resp
 
 ### Domain Exception Hierarchy
 
-This feature *consumes* the domain exception hierarchy rather than defining entities:
+This feature _consumes_ the domain exception hierarchy rather than defining entities:
 
 ```
 DomainException (base)
 ├── NotFoundException
 ├── ValidationException
+└── ConflictException
 └── NotImplementedException
 ```
 
@@ -39,9 +40,9 @@ DomainException (base)
 
 ### Endpoints Table
 
-| HTTP Method | Route | Request DTO | Response DTO | Status Codes |
-|---|---|---|---|---|
-| `GET` | `/api/health` | — | `"healthy"` (string) | `200 OK` |
+| HTTP Method | Route         | Request DTO | Response DTO         | Status Codes |
+| ----------- | ------------- | ----------- | -------------------- | ------------ |
+| `GET`       | `/api/health` | —           | `"healthy"` (string) | `200 OK`     |
 
 ### Health check scope
 
@@ -54,15 +55,14 @@ DomainException (base)
 
 The intended `ExceptionHandlingMiddleware` mapping is:
 
-| Exception Type | HTTP Status | Response Body |
-|---|---|---|
-| `NotFoundException` | `404` | `{ "error": "<message>" }` |
-| `ValidationException` | `400` | `{ "error": "Validation failed.", "errors": { "<field>": ["<message>", ...] } }` |
-| `DomainException` | `400` | `{ "error": "<message>" }` |
-| `NotImplementedException` (Domain) | `501` | `{ "error": "<message>" }` |
-| Unhandled `Exception` | `500` | `{ "error": "An unexpected error occurred." }` |
-
-**Current status:** `ExceptionHandlingMiddleware.InvokeAsync` is empty and `Program.cs` does not register it. The table above is a target contract, not current runtime behavior.
+| Exception Type                     | HTTP Status | Response Body                                                                    |
+| ---------------------------------- | ----------- | -------------------------------------------------------------------------------- |
+| `NotFoundException`                | `404`       | `{ "error": "<message>" }`                                                       |
+| `ValidationException`              | `400`       | `{ "error": "Validation failed.", "errors": { "<field>": ["<message>", ...] } }` |
+| `ConflictException`                | `409`       | `{ "error": "A conflicting state or duplicate resource was detected."}`          |
+| `DomainException`                  | `400`       | `{ "error": "<message>" }`                                                       |
+| `NotImplementedException` (Domain) | `501`       | `{ "error": "<message>" }`                                                       |
+| Unhandled `Exception`              | `500`       | `{ "error": "An unexpected error occurred." }`                                   |
 
 ### Validation error payload (target contract)
 
@@ -95,8 +95,11 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 ## 5. Domain Exceptions
 
-| Exception | When Thrown |
-|---|---|
-| — | The health endpoint declares no domain exceptions. |
+| Exception                 | When Thrown                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `NotFoundException`       | User lookup by ID returns null                                                                          |
+| `ConflictException`       | Duplicate entity, unique constraint violation, or conflicting state (e.g. duplicate enrollment or exam) |
+| `ValidationException`     | Duplicate email or missing required fields (planned)                                                    |
+| `NotImplementedException` | All current service methods and controller actions (placeholder)                                        |
 
-This feature's middleware *handles* all domain exceptions thrown by other features. See the mapping table above.
+This feature's middleware _handles_ all domain exceptions thrown by other features. See the mapping table above.
