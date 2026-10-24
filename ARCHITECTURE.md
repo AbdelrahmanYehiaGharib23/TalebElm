@@ -19,21 +19,24 @@ This separation keeps business rules independent of persistence technology and d
 ## 2. Layer overview
 
 ```text
-                   +---------------------+
-                   |         Api         |   Presentation / HTTP
-                   +---------------------+
-                        |        |
-               +---------------------+
-               |   Infrastructure    |   Persistence and external integrations
-               +---------------------+
-                        |        |
-               +---------------------+
-               |    Application      |   Use cases and orchestration
-               +---------------------+
-                        |        |
-               +---------------------+
-               |       Domain        |   Business rules and contracts
-               +---------------------+
+               +-----------------------+
+               |          Api          |   Presentation / HTTP
+               +-----------------------+
+                           |
+                           v
+               +-----------------------+
+               |    Infrastructure     |   Persistence and external integrations
+               +-----------------------+
+                           |
+                           v
+               +-----------------------+
+               |      Application      |   Use cases and orchestration
+               +-----------------------+
+                           |
+                           v
+               +-----------------------+
+               |        Domain         |   Business rules and contracts
+               +-----------------------+
 
    Tests are cross-cutting and may reference any production layer.
 ```
@@ -174,3 +177,11 @@ Domain rules participate at every step; no layer bypasses its adjacent boundary.
 | Behavioral verification | Tests |
 
 For normative conventions — service and repository patterns, DTO naming, EF Core constraint catalog, validation, controller standards, and current implementation status — see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/PROJECT_STRUCTURE.md`](docs/PROJECT_STRUCTURE.md).
+
+## External services
+
+TalebElm calls external services only through interfaces in Application, with typed HttpClient implementations in Infrastructure and business rules in Application services. Every asynchronous method accepts a CancellationToken. Background jobs are hosted services in Api that only call Application services (Decision 30).
+
+## CancellationToken
+
+New code must pass `HttpContext.RequestAborted` through the stack. Existing code migrates under the cancellation-token issue.

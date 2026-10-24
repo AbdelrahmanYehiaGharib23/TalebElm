@@ -8,7 +8,7 @@
 
 ## 1. Layer Responsibilities
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │  TalebElm.Api          (presentation)           │
 │  Controllers, Middlewares, Program.cs            │
@@ -19,7 +19,7 @@
 ├─────────────────────────────────────────────────┤
 │  TalebElm.Application     (use cases)           │
 │  DTOs, Service Interfaces + Implementations,    │
-│  Validators                                    │
+│  Validators                                     │
 ├─────────────────────────────────────────────────┤
 │  TalebElm.Domain           (core rules)         │
 │  Entities, Enums, Exceptions, Repo Interfaces   │
@@ -37,7 +37,7 @@
 
 Inner layers never reference outer layers. The dependency arrow always points inward:
 
-```
+```text
 Api → Infrastructure → Application → Domain
 ```
 
@@ -165,7 +165,7 @@ public class TrackService(IUnitOfWork unitOfWork) : ITrackService { ... }
 
 ### Exception hierarchy
 
-```
+```text
 System.Exception
  └── DomainException              → 400 Bad Request (general domain error)
       ├── NotFoundException       → 404 Not Found
@@ -235,7 +235,7 @@ Configurations define field constraints, relationships, indexes, and FK behavior
 - `UNIQUE(ModuleId, Order)` on `Lesson` (no two Lessons share an `Order` within one Module).
 - `UNIQUE(ModuleId)` on `Exam` (at most one Exam per Module).
 - `UNIQUE(UserId, TrackId)` on `TrackEnrollment` (one enrollment per learner + Track).
-- All learning-path foreign keys use `DeleteBehavior.Restrict` (see `DATABASE_ERD.md` §5); dependent deletes are rejected by the database. Mapping those failures to `409 Conflict` at the API boundary is target work (#322).
+- All learning-path foreign keys use `DeleteBehavior.Restrict` (see `DATABASE_ERD.md` §5); dependent deletes are rejected by the database. `UnitOfWork.SaveChangesAsync` translates those failures, and unique-index violations, into `ConflictException` (`409 Conflict`) without exposing the provider message; the Application layer never sees EF Core.
 
 ---
 

@@ -56,26 +56,67 @@ There is no registration endpoint, enrollment endpoint, nested lesson route, or 
 
 The current `SubmitExamRequest` accepts a client-supplied score. Do not use that value for trusted grading. The target request must submit answers so the server can compare them with a server-side answer key, calculate the score, record `UserProgress`, and unlock only the next Module on a pass.
 
+### Practice problems & external verification
+
+| HTTP | Route | Request | Response | Target status |
+|---|---|---|---|---|
+| GET | `/api/modules/{moduleId}/problems` | None | Ordered module problems list | 200, 401, 403, 404 |
+| POST | `/api/users/me/external-accounts/codeforces` | Link request (handle) | Account details with challenge instructions | 201, 400, 401, 409 |
+| POST | `/api/users/me/external-accounts/codeforces/verify` | None | Verified account details | 200, 400, 401, 404, 503 |
+| GET | `/api/auth/github` | None | Redirect to GitHub OAuth authorize URL | 302 |
+| GET | `/api/auth/github/callback` | OAuth code & state | Identity linked confirmation | 200, 400, 401, 503 |
+| POST | `/api/modules/{moduleId}/problems/verify` | None | Solves summary & module completion state | 200, 400, 401, 403, 429, 503 |
+| POST | `/api/tasks/{taskId}/verify` | Verify task request (repoName) | Task completion response & unlock state | 200, 400, 401, 403, 429, 503 |
+| POST | `/api/admin/modules/{moduleId}/problems` | Problem creation DTO | Created problem DTO | 201, 400, 401, 403 |
+| POST | `/api/admin/tasks` | Task creation DTO | Created task DTO | 201, 400, 401, 403 |
+
+### Public Resource Hub
+
+| HTTP | Route | Request | Response | Target status |
+|---|---|---|---|---|
+| GET | `/api/hub/technologies` | None | Top-level languages & categories | 200 |
+| GET | `/api/hub/technologies/{slug}` | Query filters (language, level, cost) | Technology detail with children & resources | 200, 404 |
+| GET | `/api/hub/resources` | Query filters (search, language, level, cost, kind, page, size) | Paginated curated resources | 200 |
+| POST | `/api/admin/hub/resources` | Resource creation DTO | Created resource DTO | 201, 400, 401, 403 |
+| PUT | `/api/admin/hub/resources/{id}` | Resource update DTO | Updated resource DTO | 200, 400, 401, 403, 404 |
+| DELETE | `/api/admin/hub/resources/{id}` | None | None | 204, 401, 403, 404, 409 |
+
+### Capstone projects
+
+| HTTP | Route | Request | Response | Target status |
+|---|---|---|---|---|
+| GET | `/api/tracks/{trackId}/project` | None | Capstone project & milestones | 200, 401, 403, 404 |
+| GET | `/api/tracks/{trackId}/project/milestones` | None | Ordered milestones with completion status | 200, 401, 403, 404 |
+| POST | `/api/tracks/{trackId}/project/milestones/{id}/verify` | Verify milestone request (repoName) | Milestone completion & track unlock state | 200, 400, 401, 403, 429, 503 |
+| POST | `/api/admin/tracks/{trackId}/project` | Project creation DTO | Created capstone project DTO | 201, 400, 401, 403 |
+| POST | `/api/admin/projects/{id}/milestones` | Milestone creation DTO | Created milestone DTO | 201, 400, 401, 403 |
+
 ### Who may call (proposed)
 
 The role model uses `UserRole` (`Student = 1`, `Instructor = 2`, `Admin = 3`). `Student` (the learner, default after registration) and `Admin` (content author/operator) are active in the MVP; `Instructor` is defined but reserved. "Learner" is an aggregate product term, not a stored role — see [`business/BUSINESS_RULES.md`](business/BUSINESS_RULES.md#role-taxonomy-decision-d-1).
 
 | Access | Routes |
 |---|---|
-| Anonymous | `GET /api/health`, `POST /api/auth/register`, `POST /api/auth/login` |
-| Student (authenticated) | `GET /api/tracks`, `GET /api/tracks/{trackId}`, `POST /api/tracks/{trackId}/enrollment`, lesson reads, `GET /api/exams/{examId}`, `POST /api/exams/{examId}/submit`, `/api/progress/me*` |
-| Admin | `POST/PUT/DELETE` on Tracks, Modules, Lessons, and Exams, and `GET /api/users` |
+| Anonymous | `GET /api/health`, `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/hub/technologies*`, `GET /api/hub/resources` |
+| Student (authenticated) | `GET /api/tracks`, `GET /api/tracks/{trackId}`, `POST /api/tracks/{trackId}/enrollment`, lesson reads, `GET /api/exams/{examId}`, `POST /api/exams/{examId}/submit`, `/api/progress/me*`, `GET /api/modules/{moduleId}/problems`, `/api/users/me/external-accounts*`, `POST /api/modules/{moduleId}/problems/verify`, `POST /api/tasks/{taskId}/verify`, `/api/tracks/{trackId}/project*` |
+| Admin | `POST/PUT/DELETE` on Tracks, Modules, Lessons, Exams, Hub resources, module problems, tasks, capstone projects/milestones, and `GET /api/users` |
 
-Student-facing reads should also return a Track's Modules and Lessons only to an enrolled Student once the unlock rule is implemented: a locked Module's Lessons and Exam must not be served. When an authenticated Student requests a Lesson or Exam (including exam submission) that belongs to a Module the Student has not unlocked, the API must return `403 Forbidden` — not `404` — because the resource exists but the Student is not allowed to access it yet.
+Student-facing reads should also return a Track's Modules and Lessons only to an enrolled Student once the unlock rule is implemented: a locked Module's Lessons, Exam, and Problems must not be served. When an authenticated Student requests a Lesson, Exam, or Problem set that belongs to a Module the Student has not unlocked, the API must return `403 Forbidden` — not `404` — because the resource exists but the Student is not allowed to access it yet.
 
 ## 3. Validation and Response Rules
 
 - Use GUID route identifiers and JSON DTOs.
 - Return 400 for invalid input, 401 for missing/invalid authentication, 403 for forbidden actions, 404 for unknown resources, and 409 for duplicate enrollment or exam-per-module conflicts.
 - Keep controllers thin: bind HTTP input, call an Application service interface, and translate the result to HTTP. Do not put repository or progression logic in controllers.
-- `ExceptionHandlingMiddleware` is registered and maps `NotFoundException` to 404 and FluentValidation failures to 400 as a problem+json `detail` string. A field-keyed `errors` object is target work (#321), as is translating dependent-delete/constraint failures to 409 instead of 500 (#322). See [08](features/08-health-and-error-handling.md).
+- `ExceptionHandlingMiddleware` is registered and maps `NotFoundException` to 404 and FluentValidation failures to 400 as a problem+json `detail` string. Unique and foreign-key violations from the database (a duplicate that raced past a pre-check, or a blocked dependent delete) become `ConflictException` in `UnitOfWork.SaveChangesAsync` and so return 409. Other database failures stay 500. A field-keyed `errors` object is target work (#321). See [08](features/08-health-and-error-handling.md).
 - Do not document a planned route as implemented until its controller, service wiring, and behavior tests are present.
 
 ## 4. Out of Scope for the Core Learning Flow
 
 Scheduling, attendance, and payments are not part of the current Track → Module → Lesson → Exam → Progress flow.
+
+## Decisions 35 and 36 route updates
+- Verification: `POST /api/module-problems/{moduleProblemId}/verify`.
+- GitHub OAuth: `POST /api/users/me/external-accounts/github/start`, `GET /api/auth/github/callback`.
+- Resource Hub admin: `POST /api/admin/hub/resources`, `PUT /api/admin/hub/resources/{id}`, `PUT /api/admin/hub/resources/{id}/status`, `DELETE /api/admin/hub/resources/{id}`.
+- Hub public: `GET /api/hub/technologies/csharp/aspnet-core` style slug paths in addition to `GET /api/hub/topics/{id}/resources`.
